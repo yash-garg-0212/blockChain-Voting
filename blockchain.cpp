@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 #include <regex>
+#include <cstring>
 
 using namespace std;
 
@@ -17,12 +18,10 @@ static std::string makeData(const std::string& voterId, const std::string& candi
 }
 
 bool Blockchain::parseVoteLine(const std::string& data, std::string& voterIdOut, std::string& voteOut) {
-    // Expected: "<voterId> -> Voted for <candidate>"
     auto pos = data.find(" -> Voted for ");
     if (pos == std::string::npos) return false;
     voterIdOut = data.substr(0, pos);
     voteOut = data.substr(pos + strlen(" -> Voted for "));
-    // Trim spaces (defensive)
     auto ltrim = [](std::string& s){ s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch){return !std::isspace(ch);})); };
     auto rtrim = [](std::string& s){ s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch){return !std::isspace(ch);}).base(), s.end()); };
     ltrim(voterIdOut); rtrim(voterIdOut);
@@ -31,7 +30,6 @@ bool Blockchain::parseVoteLine(const std::string& data, std::string& voterIdOut,
 }
 
 Blockchain::Blockchain() : diff(4) {
-    // Genesis block
     Block genesis(0, "Genesis Block", "0");
     genesis.currHash = genesis.mineBlock(diff);
     chain.push_back(genesis);
@@ -68,7 +66,6 @@ void Blockchain::addBlock(const std::string &voterId, const std::string &voteDat
 }
 
 bool Blockchain::isChainValid() const {
-    // Validate links + proof-of-work quality
     std::string target(diff, '0');
     for (size_t i = 1; i < chain.size(); ++i) {
         const Block& curr = chain[i];
@@ -104,7 +101,7 @@ void Blockchain::printChain() const {
 
 void Blockchain::showVoteCounts() const {
     std::map<std::string, int> counts;
-    for (size_t i = 1; i < chain.size(); ++i) { // skip genesis
+    for (size_t i = 1; i < chain.size(); ++i) {
         std::string voter, cand;
         if (parseVoteLine(chain[i].data, voter, cand)) {
             counts[cand]++;
@@ -114,7 +111,6 @@ void Blockchain::showVoteCounts() const {
         cout << "\nNo votes recorded yet.\n";
         return;
     }
-    // Find max width for pretty table
     size_t nameW = 0; int total = 0;
     for (const auto& kv : counts) { nameW = std::max(nameW, kv.first.size()); total += kv.second; }
     cout << "\nVote Counts (Total " << total << ")\n";
@@ -146,7 +142,6 @@ void Blockchain::saveToFile(const std::string &filename) const {
 void Blockchain::loadFromFile(const std::string &filename) {
     ifstream in(filename);
     if (!in) {
-        // No existing file; keep current chain
         return;
     }
     vector<Block> loaded;
@@ -164,7 +159,6 @@ void Blockchain::loadFromFile(const std::string &filename) {
             string currHash; if (!getline(in, currHash)) break;
             string nonceLine; if (!getline(in, nonceLine)) break;
             int nonce = stoi(nonceLine);
-            // separator
             string sep; getline(in, sep);
 
             Block b(idx, data, prevHash);
