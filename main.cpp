@@ -1,72 +1,48 @@
-#include "blockchain.h"
 #include <iostream>
-#include <limits>
-#include <iomanip>
-#include <fstream>
-
+#include "blockchain.h"
 using namespace std;
 
-static void printHeader() {
-    cout << "\n" << setfill('=') << setw(40) << "" << setfill(' ') << "\n";
-    cout << "|      Blockchain Voting System       |\n";
-    cout << setfill('=') << setw(40) << "" << setfill(' ') << "\n";
-}
-
-static void printMenu() {
-    cout << "\n1. Cast Vote\n"
-            "2. Show Blockchain\n"
-            "3. Validate Blockchain\n"
-            "4. Show Vote Counts\n"
-            "5. Save & Exit\n"
-            "Choose: ";
-}
-
 int main() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
+    Blockchain bChain;
+    bChain.loadFromFile("blockchain.txt");
 
-    Blockchain election;
-    // Attempt to load existing data
-    election.loadFromFile("blockchain.txt");
-
+    int choice;
     while (true) {
-        printHeader();
-        printMenu();
-        int choice;
-        if (!(cin >> choice)) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "Invalid input. Try again.\n";
-            continue;
-        }
-        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // consume newline
+        cout << "\n==== Blockchain Voting System ====\n";
+        cout << "1. Cast Vote\n";
+        cout << "2. Show Blockchain\n";
+        cout << "3. Validate Blockchain\n";
+        cout << "4. Show Vote Counts\n";
+        cout << "5. Save & Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
 
         if (choice == 1) {
-            string voterId;
+            string voterId, candidate;
             cout << "Enter 10-digit Voter ID: ";
-            getline(cin, voterId);
-
-            cout << "Choose candidate (A/B/C): ";
-            string cand; getline(cin, cand);
-            if (cand == "A" || cand == "B" || cand == "C") {
-                election.addBlock(voterId, cand);
-            } else {
-                cout << "Invalid candidate. Use A, B, or C.\n";
-            }
-        } else if (choice == 2) {
-            election.printChain();
-        } else if (choice == 3) {
-            cout << (election.isChainValid() ? "\nBlockchain is VALID.\n" : "\nBlockchain is NOT valid!\n");
-        } else if (choice == 4) {
-            election.showVoteCounts();
-        } else if (choice == 5) {
-            election.saveToFile("blockchain.txt");
-            cout << "\nSaved to blockchain.txt. Exiting...\n";
+            cin >> voterId;
+            cout << "Vote for candidate (A/B/C): ";
+            cin >> candidate;
+            bChain.addBlock(voterId, candidate);
+        } 
+        else if (choice == 2) {
+            bChain.printChain();
+        } 
+        else if (choice == 3) {
+            cout << (bChain.isChainValid() ? "Blockchain is valid\n" : "Blockchain is NOT valid\n");
+        } 
+        else if (choice == 4) {
+            bChain.showVoteCounts();
+        } 
+        else if (choice == 5) {
+            bChain.saveToFile("blockchain.txt");
+            cout << "Exiting... Blockchain saved.\n";
             break;
-        } else {
-            cout << "Please choose 1-5.\n";
+        } 
+        else {
+            cout << "Invalid choice, try again.\n";
         }
-        cout << "\nPress Enter to continue..."; cin.get();
     }
+
     return 0;
 }
